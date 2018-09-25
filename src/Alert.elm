@@ -133,7 +133,7 @@ view (State state) =
         alertsView =
             List.map alertView state.alerts
     in
-        ul [ alertsContainerStyle ] alertsView
+        ul [ alertsContainerStyle ((List.length state.alerts) == 0) ] alertsView
 
 
 alertView : Alert -> ( String, Html.Html Msg )
@@ -259,17 +259,24 @@ alertTypeClass alertType =
             "alert-danger"
 
 
-alertsContainerStyle : Html.Attribute Msg
-alertsContainerStyle =
-    style
-        [ ( "position", "fixed" )
-        , ( "width", "100%" )
-        , ( "top", "0px" )
-        , ( "left", "0px" )
-        , ( "padding", "10px" )
-        , ( "z-index", "999" )
-        , ( "border-radius", "10px" )
-        ]
+alertsContainerStyle : Bool -> Html.Attribute Msg
+alertsContainerStyle isNotEmpty =
+    let
+        top =
+            if isNotEmpty then
+                "-30px"
+            else
+                "0px"
+    in
+        style
+            [ ( "position", "absolute" )
+            , ( "width", "100%" )
+            , ( "top", top )
+            , ( "left", "0px" )
+            , ( "padding", "10px" )
+            , ( "z-index", "999" )
+            , ( "border-radius", "10px" )
+            ]
 
 
 alertStyle : Bool -> Html.Attribute Msg
