@@ -1,14 +1,13 @@
-module Alert
-    exposing
-        ( State
-        , Msg
-        , initState
-        , update
-        , view
-        , success
-        , warning
-        , error
-        )
+module Alert exposing
+    ( State
+    , initState
+    , view
+    , Msg
+    , update
+    , success
+    , warning
+    , error
+    )
 
 {-| This module implement bootstrap alerts
 
@@ -39,19 +38,26 @@ module Alert
                     ( alerts, cmd ) =
                         Alert.success "Hello, nice to meet you!" model.alerts
                 in
-                    { model | alerts = alerts } ! [ Cmd.map AlertMsg cmd ]
+                ( { model | alerts = alerts }
+                , Cmd.map AlertMsg cmd
+                )
 
             AlertMsg subMsg ->
                 let
                     ( alerts, cmd ) =
                         Alert.update subMsg model.alerts
                 in
-                    { model | alerts = alerts } ! [ Cmd.map AlertMsg cmd ]
+                ( { model | alerts = alerts }
+                , Cmd.map AlertMsg cmd
+                )
 
     main : Program Never Model Msg
     main =
         Html.program
-            { init = { alerts = Alert.initState } ! []
+            { init =
+                ( { alerts = Alert.initState }
+                , Cmd.none
+                )
             , view = view
             , update = update
             , subscriptions = always Sub.none
@@ -70,11 +76,11 @@ module Alert
 
 -}
 
-import Html exposing (div, span, text, li)
-import Html.Keyed exposing (ul)
+import Html exposing (div, li, span, text)
 import Html.Attributes exposing (class, classList, style)
-import Task
+import Html.Keyed exposing (ul)
 import Process
+import Task
 
 
 {-| This is an opaque type
@@ -133,7 +139,7 @@ view (State state) =
         alertsView =
             List.map alertView state.alerts
     in
-        ul [ alertsContainerStyle ((List.length state.alerts) == 0) ] alertsView
+    ul (alertsContainerStyle (List.length state.alerts == 0)) alertsView
 
 
 alertView : Alert -> ( String, Html.Html Msg )
@@ -142,14 +148,12 @@ alertView alert =
         alertClass =
             alertTypeClass alert.type_
     in
-        ( "alerts"
-        , li
-            [ class ("alert " ++ alertClass)
-            , alertStyle (alert.status == Animating)
-            ]
-            [ span [ alertContentStyle ] [ text alert.message ]
-            ]
-        )
+    ( "alerts"
+    , li
+        (class ("alert " ++ alertClass) :: alertStyle (alert.status == Animating))
+        [ span [ alertContentStyle ] [ text alert.message ]
+        ]
+    )
 
 
 {-| Success alert ( the green one :o )
@@ -182,7 +186,9 @@ genericAlert message alertType (State state) =
         newAlert =
             { type_ = alertType, id = newId, message = message, status = Started }
     in
-        State { state | alerts = (state.alerts ++ [ newAlert ]), lastId = newId } ! [ Task.perform (\_ -> OnAlertAdded newId) <| Process.sleep 1 ]
+    ( State { state | alerts = state.alerts ++ [ newAlert ], lastId = newId }
+    , Task.perform (\_ -> OnAlertAdded newId) <| Process.sleep 1
+    )
 
 
 {-| Update function
@@ -197,6 +203,7 @@ update msg (State state) =
                         (\alert ->
                             if alert.id == alertId then
                                 { alert | status = Animating }
+
                             else
                                 alert
                         )
@@ -207,12 +214,15 @@ update msg (State state) =
                         (\alert ->
                             if alert.id == alertId then
                                 Task.perform (\_ -> OnAlertStartRemoving alert.id) <| Process.sleep 5000
+
                             else
                                 Cmd.none
                         )
                         state.alerts
             in
-                State { state | alerts = newAlerts } ! newCmds
+            ( State { state | alerts = newAlerts }
+            , Cmd.batch newCmds
+            )
 
         OnAlertStartRemoving alertId ->
             let
@@ -221,6 +231,7 @@ update msg (State state) =
                         (\alert ->
                             if alert.id == alertId then
                                 { alert | status = Leaving }
+
                             else
                                 alert
                         )
@@ -231,19 +242,24 @@ update msg (State state) =
                         (\alert ->
                             if alert.id == alertId then
                                 Task.perform (\_ -> OnAlertRemoved alert.id) <| Process.sleep 600
+
                             else
                                 Cmd.none
                         )
                         state.alerts
             in
-                State { state | alerts = newAlerts } ! newCmds
+            ( State { state | alerts = newAlerts }
+            , Cmd.batch newCmds
+            )
 
         OnAlertRemoved alertId ->
             let
                 newAlerts =
                     List.filter (\alert -> alertId /= alert.id) state.alerts
             in
-                State { state | alerts = newAlerts } ! []
+            ( State { state | alerts = newAlerts }
+            , Cmd.none
+            )
 
 
 alertTypeClass : AlertType -> String
@@ -259,47 +275,45 @@ alertTypeClass alertType =
             "alert-danger"
 
 
-alertsContainerStyle : Bool -> Html.Attribute Msg
+alertsContainerStyle : Bool -> List (Html.Attribute Msg)
 alertsContainerStyle isNotEmpty =
     let
         top =
             if isNotEmpty then
                 "-30px"
+
             else
                 "0px"
     in
-        style
-            [ ( "position", "absolute" )
-            , ( "width", "100%" )
-            , ( "top", top )
-            , ( "left", "0px" )
-            , ( "padding", "10px" )
-            , ( "z-index", "999" )
-            , ( "border-radius", "10px" )
-            ]
+    [ style "position" "absolute"
+    , style "width" "100%"
+    , style "top" top
+    , style "left" "0px"
+    , style "padding" "10px"
+    , style "z-index" "999"
+    , style "border-radius" "10px"
+    ]
 
 
-alertStyle : Bool -> Html.Attribute Msg
+alertStyle : Bool -> List (Html.Attribute Msg)
 alertStyle withOpacity =
     let
         opacity =
             if withOpacity then
                 "1"
+
             else
                 "0"
     in
-        style
-            [ ( "width", "100%" )
-            , ( "transition", "opacity 0.6s ease-in-out" )
-            , ( "opacity", opacity )
-            , ( "z-index", "99" )
-            , ( "top", "0px" )
-            , ( "left", "0px" )
-            ]
+    [ style "width" "100%"
+    , style "transition" "opacity 0.6s ease-in-out"
+    , style "opacity" opacity
+    , style "z-index" "99"
+    , style "top" "0px"
+    , style "left" "0px"
+    ]
 
 
 alertContentStyle : Html.Attribute Msg
 alertContentStyle =
-    style
-        [ ( "padding", "10px" )
-        ]
+    style "padding" "10px"

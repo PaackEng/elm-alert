@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Alert
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -35,34 +36,34 @@ update msg model =
                 ( alerts, cmd ) =
                     Alert.success "Hello, nice to meet you!" model.alerts
             in
-                { model | alerts = alerts } ! [ Cmd.map AlertMsg cmd ]
+            ( { model | alerts = alerts }, Cmd.map AlertMsg cmd )
 
         ShowWarningAlert ->
             let
                 ( alerts, cmd ) =
                     Alert.warning "Be Careful!" model.alerts
             in
-                { model | alerts = alerts } ! [ Cmd.map AlertMsg cmd ]
+            ( { model | alerts = alerts }, Cmd.map AlertMsg cmd )
 
         ShowErrorAlert ->
             let
                 ( alerts, cmd ) =
                     Alert.error "Oh, something goes wrong" model.alerts
             in
-                { model | alerts = alerts } ! [ Cmd.map AlertMsg cmd ]
+            ( { model | alerts = alerts }, Cmd.map AlertMsg cmd )
 
         AlertMsg subMsg ->
             let
                 ( alerts, cmd ) =
                     Alert.update subMsg model.alerts
             in
-                { model | alerts = alerts } ! [ Cmd.map AlertMsg cmd ]
+            ( { model | alerts = alerts }, Cmd.map AlertMsg cmd )
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = { alerts = Alert.initState } ! []
+    Browser.element
+        { init = \_ -> ( { alerts = Alert.initState }, Cmd.none )
         , view = view
         , update = update
         , subscriptions = always Sub.none
