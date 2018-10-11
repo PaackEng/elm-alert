@@ -67,9 +67,7 @@ module Alert exposing
 @docs initState
 @docs view
 @docs Msg
-@docs initState
 @docs update
-@docs view
 @docs success
 @docs warning
 @docs error

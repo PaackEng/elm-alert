@@ -3,7 +3,7 @@
     "name": "PaackEng/elm-alert",
     "summary": "Bootstrap alert",
     "license": "BSD-3-Clause",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "exposed-modules": [
         "Alert"
     ],
